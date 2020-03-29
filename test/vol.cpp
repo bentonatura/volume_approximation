@@ -282,6 +282,7 @@ int main(const int argc, const char** argv)
          billiard=true,
          hmc = true,
             sample_only = false,
+            boundary = false,
             sdp=false,
             boltz = false,
          gaussian_sam = false;
@@ -312,6 +313,10 @@ int main(const int argc, const char** argv)
 
       if(!strcmp(argv[i],"-sample")){
           sample_only = true;
+          correct = true;
+      }
+      if(!strcmp(argv[i],"-boundary")){
+          boundary = true;
           correct = true;
       }
       if(!strcmp(argv[i],"-hmc")){
@@ -441,17 +446,14 @@ int main(const int argc, const char** argv)
                             -1.0,true,false,round,false,false,false,false,false, true);
       var.che_rad = radius;
       var.diameter = diam;
+      var.boundary = boundary;
 
       if(!boltz) {
           if (billiard) {
-
-
               spectaedro::BoundaryOracleBilliardSettings settings(SP.getLMI().getMatricesDim());
               settings.LMIatP = SP.getLMI().getA0();
               p = Point(n);
-
               rand_point_generator_spec(SP, p, N, walk_len, randPoints, var, settings);
-
           } else if (hmc) {
               spectaedro::BoundaryOracleBoltzmannHMCSettings settings2;
               settings2.first = true;
@@ -493,7 +495,7 @@ int main(const int argc, const char** argv)
                   randPoints.push_back(p);
               }
           }
-      } else {
+      } else { //boltzmann
           if (hmc) {
               spectaedro::BoundaryOracleBoltzmannHMCSettings settings2;
               settings2.first = true;

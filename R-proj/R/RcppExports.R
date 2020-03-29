@@ -7,8 +7,8 @@ generator_sdp <- function(nn = NULL, mm = NULL) {
 }
 
 #' @export
-sample_points <- function(file = NULL, distribution = NULL, N = NULL, walk_length = NULL, Temperature = NULL, random_walk = NULL) {
-    .Call(`_volesti_sample_points`, file, distribution, N, walk_length, Temperature, random_walk)
+sample_points <- function(file = NULL, distribution = NULL, N = NULL, walk_length = NULL, Temperature = NULL, random_walk = NULL, boundary = NULL) {
+    .Call(`_volesti_sample_points`, file, distribution, N, walk_length, Temperature, random_walk, boundary)
 }
 
 #' @export

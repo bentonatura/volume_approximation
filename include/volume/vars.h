@@ -71,6 +71,7 @@ public:
     bool cdhr_walk;
     bool rdhr_walk;
     bool billiard;
+    bool boundary;
 };
 
 template <typename NT, class RNG>

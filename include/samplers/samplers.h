@@ -24,29 +24,27 @@ typedef double NT_MATRIX;
 
 
 // Pick a random direction as a normilized vector
-template <class RNGType, class Point, typename NT>
+template<class RNGType, class Point, typename NT>
 Point get_direction(unsigned int dim) {
 
-    boost::normal_distribution<> rdist(0,1);
-    std::vector<NT> Xs(dim,0);
+    boost::normal_distribution<> rdist(0, 1);
+    std::vector<NT> Xs(dim, 0);
     NT normal = NT(0);
-    unsigned seed =  std::chrono::system_clock::now().time_since_epoch().count();//4 if fixed for debug
+    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();//4 if fixed for debug
     RNGType rng(seed);
     //RNGType rng2 = var.rng;
-    for (unsigned int i=0; i<dim; i++) {
+    for (unsigned int i = 0; i < dim; i++) {
         Xs[i] = rdist(rng);
         normal += Xs[i] * Xs[i];
     }
-    normal=1.0/std::sqrt(normal);
+    normal = 1.0 / std::sqrt(normal);
 
-    for (unsigned int i=0; i<dim; i++) {
+    for (unsigned int i = 0; i < dim; i++) {
         Xs[i] = Xs[i] * normal;
     }
     Point p(dim, Xs.begin(), Xs.end());
     return p;
 }
-
-
 
 
 /**
@@ -60,15 +58,15 @@ Point get_direction(unsigned int dim) {
  * @param choleskyDecomp the cholesky decomposition of V
  * @return
  */
-template <class MT, class RNGType, class Point, typename NT>
-Point get_direction(unsigned int dim, const MT& choleskyDecomp) {
+template<class MT, class RNGType, class Point, typename NT>
+Point get_direction(unsigned int dim, const MT &choleskyDecomp) {
     Point l = get_direction<RNGType, Point, NT>(dim);
     return Point(choleskyDecomp * l.getCoefficients());
 }
 
 // Pick a random point from a d-sphere
-template <class RNGType, class Point, typename NT>
-Point get_point_on_Dsphere(unsigned int dim, NT radius){
+template<class RNGType, class Point, typename NT>
+Point get_point_on_Dsphere(unsigned int dim, NT radius) {
     Point p = get_direction<RNGType, Point, NT>(dim);
     p = (radius == 0) ? p : radius * p;
     return p;
@@ -78,49 +76,48 @@ Point get_point_on_Dsphere(unsigned int dim, NT radius){
  * direction for "running Shake-and-Bake" as in 1.3.3 of
  * Boender et al. (1991)
  */
-template <class RNGType, class Point, typename NT, class Parameters>
-void rsab_get_direction(const unsigned int& dim, const Point& normal, Point& direction, Parameters& var) {
+template<class RNGType, class Point, typename NT, class Parameters>
+void rsab_get_direction(const unsigned int &dim, const Point &normal, Point &direction, Parameters &var) {
     RNGType &rng = var.rng;
     boost::random::uniform_real_distribution<> urdist(0, 1);
 
 
-    NT r = pow(urdist(rng), 1.0/(dim - 1));
+    NT r = pow(urdist(rng), 1.0 / (dim - 1));
 //    NT r = pow(0.5, 1.0/(dim - 1));
-    direction = get_point_on_Dsphere<RNGType, Point, NT> (dim,1);
+    direction = get_point_on_Dsphere<RNGType, Point, NT>(dim, 1);
 
     NT cd = direction.dot(normal);
     NT fd = r / sqrt(1 - cd * cd);
     NT fc = -(r * cd / sqrt(1 - cd * cd) + sqrt(1 - r * r));
-    direction *= fd ;
+    direction *= fd;
     direction += fc * normal;
     direction.normalize();
 }
 
 // Pick a random point from a d-ball
-template <class RNGType, class Point, typename NT>
-Point get_point_in_Dsphere(unsigned int dim, NT radius){
+template<class RNGType, class Point, typename NT>
+Point get_point_in_Dsphere(unsigned int dim, NT radius) {
 
-    boost::random::uniform_real_distribution<> urdist(0,1);
+    boost::random::uniform_real_distribution<> urdist(0, 1);
     NT U;
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     RNGType rng2(seed);
     Point p = get_direction<RNGType, Point, NT>(dim);
     U = urdist(rng2);
-    U = std::pow(U, 1.0/(NT(dim)));
-    p = (radius*U)*p;
+    U = std::pow(U, 1.0 / (NT(dim)));
+    p = (radius * U) * p;
     return p;
 }
 
 // ball walk with uniform target distribution
-template <class RNGType, class Point, class Polytope, typename NT>
+template<class RNGType, class Point, class Polytope, typename NT>
 void ball_walk(Point &p,
                Polytope &P,
-               NT delta)
-{
+               NT delta) {
     //typedef typename Parameters::RNGType RNGType;
     Point y = get_point_in_Dsphere<RNGType, Point>(p.dimension(), delta);
     y = y + p;
-    if (P.is_in(y)==-1) p = y;
+    if (P.is_in(y) == -1) p = y;
 }
 
 // WARNING: USE ONLY WITH BIRKHOFF POLYOPES
@@ -153,13 +150,13 @@ int birk_sym(T &P, K &randPoints, Point &p) {
 
 // ----- RANDOM POINT GENERATION FUNCTIONS ------------ //
 
-template <class Polytope, class PointList, class Parameters, class Point>
+template<class Polytope, class PointList, class Parameters, class Point>
 void rand_point_generator(Polytope &P,
-                         Point &p,   // a point to start
-                         unsigned int rnum,
-                         unsigned int walk_len,
-                         PointList &randPoints,
-                         Parameters const& var)  // constants for volume
+                          Point &p,   // a point to start
+                          unsigned int rnum,
+                          unsigned int walk_len,
+                          PointList &randPoints,
+                          Parameters const &var)  // constants for volume
 {
     typedef typename Parameters::RNGType RNGType;
     typedef typename Point::FT NT;
@@ -168,17 +165,17 @@ void rand_point_generator(Polytope &P,
     boost::random::uniform_real_distribution<> urdist(0, 1);
     boost::random::uniform_int_distribution<> uidist(0, n - 1);
 
-    std::vector <NT> lamdas(P.num_of_hyperplanes(), NT(0));
+    std::vector<NT> lamdas(P.num_of_hyperplanes(), NT(0));
     unsigned int rand_coord, rand_coord_prev;
     NT kapa, ball_rad = var.delta;
     Point p_prev = p;
 
     if (var.ball_walk) {
-        ball_walk <RNGType> (p, P, ball_rad);
-    }else if (var.cdhr_walk) {//Compute the first point for the CDHR
+        ball_walk<RNGType>(p, P, ball_rad);
+    } else if (var.cdhr_walk) {//Compute the first point for the CDHR
         rand_coord = uidist(rng);
         kapa = urdist(rng);
-        std::pair <NT, NT> bpair = P.line_intersect_coord(p, rand_coord, lamdas);
+        std::pair<NT, NT> bpair = P.line_intersect_coord(p, rand_coord, lamdas);
         p_prev = p;
         p.set_coord(rand_coord, p[rand_coord] + bpair.first + kapa * (bpair.second - bpair.first));
     } else
@@ -188,7 +185,7 @@ void rand_point_generator(Polytope &P,
         for (unsigned int j = 0; j < walk_len; ++j) {
             if (var.ball_walk) {
                 ball_walk<RNGType>(p, P, ball_rad);
-            }else if (var.cdhr_walk) {
+            } else if (var.cdhr_walk) {
                 rand_coord_prev = rand_coord;
                 rand_coord = uidist(rng);
                 kapa = urdist(rng);
@@ -201,17 +198,17 @@ void rand_point_generator(Polytope &P,
 
 }
 
-template <class Spectrahedron, class Parameters, class SpecSettings, class Point>
+template<class Spectrahedron, class Parameters, class SpecSettings, class Point>
 void uniform_next_point_spec(Spectrahedron &spectrahedron,
-                          Point &p,   // a point to start
-                          unsigned int walk_len,
-                          Parameters &var,
-                          SpecSettings &settings) {
+                             Point &p,   // a point to start
+                             unsigned int walk_len,
+                             Parameters &var,
+                             SpecSettings &settings) {
 
     for (unsigned int j = 0; j < walk_len; ++j) {
         if (var.billiard) {
             billiard_walk(spectrahedron, p, var.diameter, var, p, 0.0,
-                             settings, false);
+                          settings, false);
         } else {
             //hit_and_run_spec(p, spectrahedron, var);
         }
@@ -219,22 +216,21 @@ void uniform_next_point_spec(Spectrahedron &spectrahedron,
 }
 
 
-template <class Spectrahedron, class PointList, class Parameters, class SpecSettings, class Point>
+template<class Spectrahedron, class PointList, class Parameters, class SpecSettings, class Point>
 void rand_point_generator_spec(Spectrahedron &spectrahedron,
-                          Point &p,   // a point to start
-                          unsigned int rnum,
-                          unsigned int walk_len,
-                          PointList &randPoints,
-                          Parameters &var,
-                          SpecSettings &settings)  {
-
-
+                               Point &p,   // a point to start
+                               unsigned int rnum,
+                               unsigned int walk_len,
+                               PointList &randPoints,
+                               Parameters &var,
+                               SpecSettings &settings) {
+    std::cout << "Boundary var: " << var.boundary << std::endl;
 
     for (unsigned int i = 1; i <= rnum; ++i) {
         for (unsigned int j = 0; j < walk_len; ++j) {
             if (var.billiard) {
                 billiard_walk(spectrahedron, p, var.diameter, var, p, 0.0,
-                                 settings, false);
+                              settings, false);
             } else {
                 //hit_and_run_spec(p, spectrahedron, var);
             }
@@ -244,15 +240,15 @@ void rand_point_generator_spec(Spectrahedron &spectrahedron,
 }
 
 
-template <class BallPoly, class PointList, class Parameters, class Point>
+template<class BallPoly, class PointList, class Parameters, class Point>
 void rand_point_generator(BallPoly &PBLarge,
-                         Point &p,   // a point to start
-                         unsigned int rnum,
-                         unsigned int walk_len,
-                         PointList &randPoints,
-                         BallPoly &PBSmall,
-                         unsigned int &nump_PBSmall,
-                         Parameters const& var) {  // constants for volume
+                          Point &p,   // a point to start
+                          unsigned int rnum,
+                          unsigned int walk_len,
+                          PointList &randPoints,
+                          BallPoly &PBSmall,
+                          unsigned int &nump_PBSmall,
+                          Parameters const &var) {  // constants for volume
 
     typedef typename Point::FT NT;
     typedef typename Parameters::RNGType RNGType;
@@ -260,18 +256,18 @@ void rand_point_generator(BallPoly &PBLarge,
     RNGType &rng = var.rng;
     boost::random::uniform_real_distribution<> urdist(0, 1);
     boost::random::uniform_int_distribution<> uidist(0, n - 1);
-    std::vector <NT> lamdas(PBLarge.num_of_hyperplanes(), NT(0));
+    std::vector<NT> lamdas(PBLarge.num_of_hyperplanes(), NT(0));
     unsigned int rand_coord, rand_coord_prev;
     NT kapa, ball_rad = var.delta;
     Point p_prev = p;
 
     if (var.ball_walk) {
         ball_walk<RNGType>(p, PBLarge, ball_rad);
-    }else if (var.cdhr_walk) {//Compute the first point for the CDHR
+    } else if (var.cdhr_walk) {//Compute the first point for the CDHR
         rand_coord = uidist(rng);
         kapa = urdist(rng);
 
-        std::pair <NT, NT> bpair = PBLarge.line_intersect_coord(p, rand_coord, lamdas);
+        std::pair<NT, NT> bpair = PBLarge.line_intersect_coord(p, rand_coord, lamdas);
         p_prev = p;
         p.set_coord(rand_coord, p[rand_coord] + bpair.first + kapa * (bpair.second - bpair.first));
     } else {
@@ -282,7 +278,7 @@ void rand_point_generator(BallPoly &PBLarge,
         for (unsigned int j = 0; j < walk_len; ++j) {
             if (var.ball_walk) {
                 ball_walk<RNGType>(p, PBLarge, ball_rad);
-            }else if (var.cdhr_walk) {
+            } else if (var.cdhr_walk) {
                 rand_coord_prev = rand_coord;
                 rand_coord = uidist(rng);
                 kapa = urdist(rng);
@@ -300,34 +296,34 @@ void rand_point_generator(BallPoly &PBLarge,
 
 template<class Polytope, class Parameters, class Point, class MT>
 void rand_point_generator_Boltzmann(Polytope &P,
-                                        Point& c,
-                                        Point &p,   // a point to start
-                                        unsigned int walk_length,
-                                        Parameters &var,
-                                        double temperature,
-                                        const MT& covariance_matrix) {
+                                    Point &c,
+                                    Point &p,   // a point to start
+                                    unsigned int walk_length,
+                                    Parameters &var,
+                                    double temperature,
+                                    const MT &covariance_matrix) {
 
     // begin sampling
-    for (unsigned int i = 1; i <= walk_length ; ++i) {
+    for (unsigned int i = 1; i <= walk_length; ++i) {
         hit_and_run_Boltzmann(p, P, var, c, temperature, covariance_matrix);
     }
 }
 
 template<class Polytope, class Parameters, class Point, class MT, class PointsList>
 void rand_point_generator_Boltzmann(Polytope &P,
-                                    Point& c,
+                                    Point &c,
                                     Point &p,   // a point to start
                                     unsigned int pointsNum,
                                     unsigned int walk_length,
                                     Parameters &var,
                                     double temperature,
-                                    const MT& covariance_matrix,
-                                    PointsList& points) {
+                                    const MT &covariance_matrix,
+                                    PointsList &points) {
 
     // begin sampling
     Point temp = p;
 
-    for (int at=0 ; at<pointsNum ; at++) {
+    for (int at = 0; at < pointsNum; at++) {
         p = temp;
 
         for (unsigned int i = 1; i <= walk_length; ++i) {
@@ -339,14 +335,13 @@ void rand_point_generator_Boltzmann(Polytope &P,
 }
 
 
-
-template <class Spectrahedron, class PointList, class Parameters, class Point>
+template<class Spectrahedron, class PointList, class Parameters, class Point>
 void boundary_rand_point_generator_spec(Spectrahedron &spectrahedron,
-                                   Point &p,   // a point to start
-                                   unsigned int rnum,
-                                   unsigned int walk_len,
-                                   PointList &randPoints,
-                                   Parameters &var)  // constants for volume
+                                        Point &p,   // a point to start
+                                        unsigned int rnum,
+                                        unsigned int walk_len,
+                                        PointList &randPoints,
+                                        Parameters &var)  // constants for volume
 {
     typedef typename Parameters::RNGType RNGType;
     typedef typename Point::FT NT;
@@ -361,7 +356,7 @@ void boundary_rand_point_generator_spec(Spectrahedron &spectrahedron,
     NT lambda;
     Point p1(n), p2(n), v(n);
     VT pointVT(n), lVT(n);
-    std::pair <NT, NT> dbpair;
+    std::pair<NT, NT> dbpair;
 
 
     //hit_and_run(p, P, var);
@@ -391,10 +386,10 @@ void boundary_rand_point_generator_spec(Spectrahedron &spectrahedron,
 // ----- HIT AND RUN FUNCTIONS ------------ //
 
 //hit-and-run with random directions and update
-template <class Polytope, class Point, class Parameters>
+template<class Polytope, class Point, class Parameters>
 void hit_and_run(Point &p,
-                Polytope &P,
-                Parameters const& var) {
+                 Polytope &P,
+                 Parameters const &var) {
     typedef typename Parameters::RNGType RNGType;
     typedef typename Point::FT NT;
     unsigned int n = P.dimension();
@@ -402,7 +397,7 @@ void hit_and_run(Point &p,
     boost::random::uniform_real_distribution<> urdist(0, 1);
 
     Point l = get_direction<RNGType, Point, NT>(n);
-    std::pair <NT, NT> dbpair = P.line_intersect(p, l);
+    std::pair<NT, NT> dbpair = P.line_intersect(p, l);
     NT min_plus = dbpair.first;
     NT max_minus = dbpair.second;
     Point b1 = (min_plus * l) + p;
@@ -412,41 +407,41 @@ void hit_and_run(Point &p,
     p = ((1 - lambda) * b2) + p;
 }
 
-template <typename NT>
+template<typename NT>
 NT expCDF(NT x, NT lambda) {
-  return 1.0 - std::exp(- lambda*x);
+    return 1.0 - std::exp(-lambda * x);
 }
 
-template <typename NT>
+template<typename NT>
 NT expQuantile(NT p, NT lambda) {
-  return -std::log(1.0 - p) / lambda;
+    return -std::log(1.0 - p) / lambda;
 }
 
-template <class RNGType, typename NT>
-NT texp(NT lambda, NT a, NT b, RNGType& rng) {
-  boost::random::uniform_real_distribution<> urdist(0, 1);
-  NT u = urdist(rng);
-  NT cdfA = expCDF(a, lambda);
-  NT cdfB = expCDF(b, lambda);
-  
-  return expQuantile(cdfA + u*(cdfB - cdfA), lambda);
+template<class RNGType, typename NT>
+NT texp(NT lambda, NT a, NT b, RNGType &rng) {
+    boost::random::uniform_real_distribution<> urdist(0, 1);
+    NT u = urdist(rng);
+    NT cdfA = expCDF(a, lambda);
+    NT cdfB = expCDF(b, lambda);
+
+    return expQuantile(cdfA + u * (cdfB - cdfA), lambda);
 }
 
-template <class Polytope, class Point, class Parameters, class MT>
+template<class Polytope, class Point, class Parameters, class MT>
 void hit_and_run_Boltzmann(Point &p,
                            Polytope &P,
                            Parameters &var,
-                           Point& BoltzmannDirection,
+                           Point &BoltzmannDirection,
                            double BoltzmannParameter,
-                           const MT& choleskyDecomp) {
+                           const MT &choleskyDecomp) {
     typedef typename Parameters::RNGType RNGType;
     typedef typename Point::FT NT;
-    unsigned int n =p.dimension();
+    unsigned int n = p.dimension();
     RNGType &rng = var.rng;
 
     Point l = get_direction<RNGType, Point, NT>(n, choleskyDecomp);
 
-    std::pair <NT, NT> dbpair = P.line_intersect(p, l);
+    std::pair<NT, NT> dbpair = P.line_intersect(p, l);
     NT min_plus = dbpair.first;
     NT max_minus = dbpair.second;
     Point b1 = (min_plus * l) + p;
@@ -459,8 +454,7 @@ void hit_and_run_Boltzmann(Point &p,
     if (c1 > c2) {
         lambda = texp((c1 - c2) / BoltzmannParameter, NT(0), min_plus - max_minus, rng);
         p = b2;
-    }
-    else {
+    } else {
         lambda = -texp((c2 - c1) / BoltzmannParameter, NT(0), min_plus - max_minus, rng);
         p = b1;
     }
@@ -469,23 +463,23 @@ void hit_and_run_Boltzmann(Point &p,
 }
 
 
-template <class Spectrahedron, class Point, class Parameters, typename NT>
+template<class Spectrahedron, class Point, class Parameters, typename NT>
 void hit_and_run_Boltzmann_spec(Point &p,
                                 Spectrahedron &P,
-                           Parameters &var,
-                           Point& BoltzmannDirection,
-                           NT BoltzmannParameter) {
+                                Parameters &var,
+                                Point &BoltzmannDirection,
+                                NT BoltzmannParameter) {
     typedef typename Parameters::RNGType RNGType;
     //typedef typename Point::FT NT;
     typedef typename Spectrahedron::VT VT;
-    unsigned int n =p.dimension();
+    unsigned int n = p.dimension();
     RNGType &rng = var.rng;
 
     Point l = get_direction<RNGType, Point, NT>(n);
 
     VT pointVT = p.getCoefficients();
     VT lVT = l.getCoefficients();
-    std::pair <NT, NT> dbpair = P.boundaryOracle(pointVT, lVT);
+    std::pair<NT, NT> dbpair = P.boundaryOracle(pointVT, lVT);
     NT min_plus = dbpair.first;
     NT max_minus = dbpair.second;
     Point b1 = (min_plus * l) + p;
@@ -498,8 +492,7 @@ void hit_and_run_Boltzmann_spec(Point &p,
     if (c1 > c2) {
         lambda = texp((c1 - c2) / BoltzmannParameter, NT(0), min_plus - max_minus, rng);
         p = b2;
-    }
-    else {
+    } else {
         lambda = -texp((c2 - c1) / BoltzmannParameter, NT(0), min_plus - max_minus, rng);
         p = b1;
     }
@@ -507,10 +500,10 @@ void hit_and_run_Boltzmann_spec(Point &p,
     p = (lambda * l) + p;
 }
 
-template <class Point, class Spectrahedron, class Parameters>
-void hit_and_run_spec(Point& point,
-        Spectrahedron &spectrahedron,
-        Parameters &var) {
+template<class Point, class Spectrahedron, class Parameters>
+void hit_and_run_spec(Point &point,
+                      Spectrahedron &spectrahedron,
+                      Parameters &var) {
     typedef typename Spectrahedron::VT VT;
     typedef typename Parameters::RNGType RNGType;
     unsigned int n = point.dimension();
@@ -520,17 +513,18 @@ void hit_and_run_spec(Point& point,
     Point l = get_direction<RNGType, Point, double>(n);
     VT pointVT = point.getCoefficients();
     VT lVT = l.getCoefficients();
-    std::pair <double, double> dbpair = spectrahedron.boundaryOracle(pointVT, lVT);
+    std::pair<double, double> dbpair = spectrahedron.boundaryOracle(pointVT, lVT);
     double min_plus = dbpair.first;
     double max_minus = dbpair.second;
     Point b1 = (min_plus * l) + point;
     Point b2 = (max_minus * l) + point;
     double lambda = urdist(rng);
+    if (var.boundary) {
+        lambda = .995;
+    }
     point = (lambda * b1);
     point = ((1 - lambda) * b2) + point;
 }
-
-
 //template <class Point, class Parameters>
 //void hit_and_run_Boltzmann(Point& point,
 //                 Spectrahedron &spectrahedron,
@@ -554,390 +548,392 @@ void hit_and_run_spec(Point& point,
 //    point = ((1 - lambda) * b2) + point;
 //}
 
-template <class Point, class Spectrahedron, class Parameters, class VT>
-void hit_and_run_spec(Point& point,
-                 Spectrahedron &spectrahedron,
-                 Parameters &var,
-                 VT& a,
-                 double b) {
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n = point.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
+    template<class Point, class Spectrahedron, class Parameters, class VT>
+    void hit_and_run_spec(Point &point,
+                          Spectrahedron &spectrahedron,
+                          Parameters &var,
+                          VT &a,
+                          double b) {
+        typedef typename Parameters::RNGType RNGType;
+        unsigned int n = point.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
 
-    Point l = get_direction<RNGType, Point, double>(n);
-    VT pointVT = point.getCoefficients();
-    VT lVT = l.getCoefficients();
-    std::pair <double, double> dbpair = spectrahedron.boundaryOracleEfficient(pointVT, lVT, a, b);
-    double min_plus = dbpair.first;
-    double max_minus = dbpair.second;
-    Point b1 = (min_plus * l) + point;
-    Point b2 = (max_minus * l) + point;
-    double lambda = urdist(rng);
-    point = (lambda * b1);
-    point = ((1 - lambda) * b2) + point;
-}
-
-template <class Point, class Spectrahedron, class Parameters, class VT, class MT>
-void hit_and_run_sampled_covariance_matrix_spec(Point& point,
-                 Spectrahedron &spectrahedron,
-                 Parameters &var,
-                 VT& a,
-                 double b,
-                 MT& covarianceMatrix) {
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n = point.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
-
-    Point l = get_direction<RNGType, Point, double>(n);
-    VT pointVT = point.getCoefficients();
-    VT lVT = l.getCoefficients();
-    lVT = covarianceMatrix * lVT;
-    l = Point(lVT);
-    std::pair <double, double> dbpair = spectrahedron.boundaryOracleEfficient(pointVT, lVT, a, b);
-    double min_plus = dbpair.first;
-    double max_minus = dbpair.second;
-    Point b1 = (min_plus * l) + point;
-    Point b2 = (max_minus * l) + point;
-    double lambda = urdist(rng);
-    point = (lambda * b1);
-    point = ((1 - lambda) * b2) + point;
-}
-
-//returns at b1, b2 the intersection points of the ray with the polytope
-template<class Polytope, class Point, class Parameters>
-void hit_and_run(Point &p,
-                 Polytope &P,
-                 Parameters &var,
-                 Point &b1,
-                 Point &b2) {
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n = P.dimension();
-    typedef typename Point::FT NT;
-
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
-
-    Point l = get_direction<RNGType, Point, NT>(n);
-    std::pair<NT, NT> dbpair = P.line_intersect(p, l);
-    NT min_plus = dbpair.first;
-    NT max_minus = dbpair.second;
-    b1 = (min_plus * l) + p;
-    b2 = (max_minus * l) + p;
-    NT lambda = urdist(rng);
-    p = (lambda * b1);
-    p = ((1 - lambda) * b2) + p;
-}
-
-template <class Point, class Spectrahedron, class Parameters>
-void hit_and_run_spec(Point& point,
-                 Spectrahedron &spectrahedron,
-                 Parameters &var,
-                 Point &b1,
-                 Point &b2) {
-    typedef typename Spectrahedron::VT VT;
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n = point.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
-
-    Point l = get_direction<RNGType, Point, double>(n);
-    VT pointVT = point.getCoefficients();
-    VT lVT = l.getCoefficients();
-    std::pair <double, double> dbpair = spectrahedron.boundaryOracle(pointVT, lVT);
-    double min_plus = dbpair.first;
-    double max_minus = dbpair.second;
-    b1 = (min_plus * l) + point;
-    b2 = (max_minus * l) + point;
-    double lambda = urdist(rng);
-    point = (lambda * b1);
-    point = ((1 - lambda) * b2) + point;
-}
-
-
-template <typename NT, class Point, class Spectrahedron, class Parameters, class VT>
-void hit_and_run_spec(Point& point,
-                 Spectrahedron &spectrahedron,
-                 Parameters &var,
-                 Point &b1,
-                 Point &b2,
-                 VT& a,
-                 NT b) {
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n = point.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
-
-    Point l = get_direction<RNGType, Point, NT>(n);
-    VT pointVT = point.getCoefficients();
-    VT lVT = l.getCoefficients();
-    std::pair <NT, NT> dbpair = spectrahedron.boundaryOracleEfficient(pointVT, lVT, a, b);
-    NT min_plus = dbpair.first;
-    NT max_minus = dbpair.second;
-    b1 = (min_plus * l) + point;
-    b2 = (max_minus * l) + point;
-    NT lambda = urdist(rng);
-    point = (lambda * b1);
-    point = ((1 - lambda) * b2) + point;
-}
-
-template <typename NT, class Point, class Spectrahedron, class SpecSettings, class Parameters>
-void hit_and_run_coord_update_spec(Point &p,
-                              Spectrahedron &spectrahedron,
-                              const unsigned int& rand_coord,
-                              const Point& a,
-                              const NT & b,
-                              Parameters &var,
-                              SpecSettings& settings,
-                              NT& returnLambda) {
-    std::pair<NT, NT> bpair = spectrahedron.boundaryOracleCDHR (p.getCoefficients(), rand_coord, a.getCoefficients(), b, settings);
-
-    if (bpair.first == 0 && bpair.second == 0) {
-        returnLambda = 0;
-        return;
+        Point l = get_direction<RNGType, Point, double>(n);
+        VT pointVT = point.getCoefficients();
+        VT lVT = l.getCoefficients();
+        std::pair<double, double> dbpair = spectrahedron.boundaryOracleEfficient(pointVT, lVT, a, b);
+        double min_plus = dbpair.first;
+        double max_minus = dbpair.second;
+        Point b1 = (min_plus * l) + point;
+        Point b2 = (max_minus * l) + point;
+        double lambda = urdist(rng);
+        point = (lambda * b1);
+        point = ((1 - lambda) * b2) + point;
     }
 
-    typedef typename Parameters::RNGType RNGType;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
-    RNGType &rng = var.rng;
-    NT kapa = urdist(rng);
+    template<class Point, class Spectrahedron, class Parameters, class VT, class MT>
+    void hit_and_run_sampled_covariance_matrix_spec(Point &point,
+                                                    Spectrahedron &spectrahedron,
+                                                    Parameters &var,
+                                                    VT &a,
+                                                    double b,
+                                                    MT &covarianceMatrix) {
+        typedef typename Parameters::RNGType RNGType;
+        unsigned int n = point.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
 
-    returnLambda = bpair.first + kapa * (bpair.second - bpair.first);
+        Point l = get_direction<RNGType, Point, double>(n);
+        VT pointVT = point.getCoefficients();
+        VT lVT = l.getCoefficients();
+        lVT = covarianceMatrix * lVT;
+        l = Point(lVT);
+        std::pair<double, double> dbpair = spectrahedron.boundaryOracleEfficient(pointVT, lVT, a, b);
+        double min_plus = dbpair.first;
+        double max_minus = dbpair.second;
+        Point b1 = (min_plus * l) + point;
+        Point b2 = (max_minus * l) + point;
+        double lambda = urdist(rng);
+        point = (lambda * b1);
+        point = ((1 - lambda) * b2) + point;
+    }
 
-    settings.LMIatP.noalias() += returnLambda * spectrahedron.getLMI().getMatrices()[rand_coord];
-    p.set_coord(rand_coord, p[rand_coord] + returnLambda);
-}
+//returns at b1, b2 the intersection points of the ray with the polytope
+    template<class Polytope, class Point, class Parameters>
+    void hit_and_run(Point &p,
+                     Polytope &P,
+                     Parameters &var,
+                     Point &b1,
+                     Point &b2) {
+        typedef typename Parameters::RNGType RNGType;
+        unsigned int n = P.dimension();
+        typedef typename Point::FT NT;
 
-template <class Point, class Spectrahedron, class Parameters, class VT, typename NT, class MT>
-void hit_and_run_sampled_covariance_matrix_spec(Point& point,
-                 Spectrahedron &spectrahedron,
-                 Parameters &var,
-                 Point &b1,
-                 Point &b2,
-                 VT& a,
-                 NT b,
-                 MT& covarianceMatrix) {
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n = point.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
 
-    Point l = get_direction<RNGType, Point, NT>(n);
-    VT pointVT = point.getCoefficients();
-    VT lVT = l.getCoefficients();
-    lVT = covarianceMatrix * lVT;
-    l = Point(lVT);
-    std::pair <NT, NT> dbpair = spectrahedron.boundaryOracleEfficient(pointVT, lVT, a, b);
-    NT min_plus = dbpair.first;
-    NT max_minus = dbpair.second;
-    b1 = (min_plus * l) + point;
-    b2 = (max_minus * l) + point;
-    NT lambda = urdist(rng);
-    point = (lambda * b1);
-    point = ((1 - lambda) * b2) + point;
-}
+        Point l = get_direction<RNGType, Point, NT>(n);
+        std::pair<NT, NT> dbpair = P.line_intersect(p, l);
+        NT min_plus = dbpair.first;
+        NT max_minus = dbpair.second;
+        b1 = (min_plus * l) + p;
+        b2 = (max_minus * l) + p;
+        NT lambda = urdist(rng);
+        p = (lambda * b1);
+        p = ((1 - lambda) * b2) + p;
+    }
+
+    template<class Point, class Spectrahedron, class Parameters>
+    void hit_and_run_spec(Point &point,
+                          Spectrahedron &spectrahedron,
+                          Parameters &var,
+                          Point &b1,
+                          Point &b2) {
+        typedef typename Spectrahedron::VT VT;
+        typedef typename Parameters::RNGType RNGType;
+        unsigned int n = point.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
+
+        Point l = get_direction<RNGType, Point, double>(n);
+        VT pointVT = point.getCoefficients();
+        VT lVT = l.getCoefficients();
+        std::pair<double, double> dbpair = spectrahedron.boundaryOracle(pointVT, lVT);
+        double min_plus = dbpair.first;
+        double max_minus = dbpair.second;
+        b1 = (min_plus * l) + point;
+        b2 = (max_minus * l) + point;
+        double lambda = urdist(rng);
+        point = (lambda * b1);
+        point = ((1 - lambda) * b2) + point;
+    }
 
 
-template<class Polytope, class Point, class Parameters, class MT>
-void hit_and_run_sampled_covariance_matrix(Point &p,
-                                         Polytope &P,
-                                         Parameters &var,
-                                         Point &b1,
-                                         Point &b2,
-                                         MT &covarianceMatrix) {
-    typedef typename Parameters::RNGType RNGType;
-    typedef typename Point::FT NT;
-    typedef typename Polytope::VT VT;
+    template<typename NT, class Point, class Spectrahedron, class Parameters, class VT>
+    void hit_and_run_spec(Point &point,
+                          Spectrahedron &spectrahedron,
+                          Parameters &var,
+                          Point &b1,
+                          Point &b2,
+                          VT &a,
+                          NT b) {
+        typedef typename Parameters::RNGType RNGType;
+        unsigned int n = point.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
 
-    unsigned int n = P.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
+        Point l = get_direction<RNGType, Point, NT>(n);
+        VT pointVT = point.getCoefficients();
+        VT lVT = l.getCoefficients();
+        std::pair<NT, NT> dbpair = spectrahedron.boundaryOracleEfficient(pointVT, lVT, a, b);
+        NT min_plus = dbpair.first;
+        NT max_minus = dbpair.second;
+        b1 = (min_plus * l) + point;
+        b2 = (max_minus * l) + point;
+        NT lambda = urdist(rng);
+        point = (lambda * b1);
+        point = ((1 - lambda) * b2) + point;
+    }
 
-    Point l = get_direction<RNGType, Point, NT>(n);
-    VT lVT = l.getCoefficients();
-    lVT = covarianceMatrix * lVT;
-    l = Point(lVT);
-    std::pair<NT, NT> dbpair = P.line_intersect(p, l);
-    NT min_plus = dbpair.first;
-    NT max_minus = dbpair.second;
-    b1 = (min_plus * l) + p;
-    b2 = (max_minus * l) + p;
-    NT lambda = urdist(rng);
-    p = (lambda * b1);
-    p = ((1 - lambda) * b2) + p;
-}
+    template<typename NT, class Point, class Spectrahedron, class SpecSettings, class Parameters>
+    void hit_and_run_coord_update_spec(Point &p,
+                                       Spectrahedron &spectrahedron,
+                                       const unsigned int &rand_coord,
+                                       const Point &a,
+                                       const NT &b,
+                                       Parameters &var,
+                                       SpecSettings &settings,
+                                       NT &returnLambda) {
+        std::pair<NT, NT> bpair = spectrahedron.boundaryOracleCDHR(p.getCoefficients(), rand_coord, a.getCoefficients(),
+                                                                   b,
+                                                                   settings);
+
+        if (bpair.first == 0 && bpair.second == 0) {
+            returnLambda = 0;
+            return;
+        }
+
+        typedef typename Parameters::RNGType RNGType;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
+        RNGType &rng = var.rng;
+        NT kapa = urdist(rng);
+
+        returnLambda = bpair.first + kapa * (bpair.second - bpair.first);
+
+        settings.LMIatP.noalias() += returnLambda * spectrahedron.getLMI().getMatrices()[rand_coord];
+        p.set_coord(rand_coord, p[rand_coord] + returnLambda);
+    }
+
+    template<class Point, class Spectrahedron, class Parameters, class VT, typename NT, class MT>
+    void hit_and_run_sampled_covariance_matrix_spec(Point &point,
+                                                    Spectrahedron &spectrahedron,
+                                                    Parameters &var,
+                                                    Point &b1,
+                                                    Point &b2,
+                                                    VT &a,
+                                                    NT b,
+                                                    MT &covarianceMatrix) {
+        typedef typename Parameters::RNGType RNGType;
+        unsigned int n = point.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
+
+        Point l = get_direction<RNGType, Point, NT>(n);
+        VT pointVT = point.getCoefficients();
+        VT lVT = l.getCoefficients();
+        lVT = covarianceMatrix * lVT;
+        l = Point(lVT);
+        std::pair<NT, NT> dbpair = spectrahedron.boundaryOracleEfficient(pointVT, lVT, a, b);
+        NT min_plus = dbpair.first;
+        NT max_minus = dbpair.second;
+        b1 = (min_plus * l) + point;
+        b2 = (max_minus * l) + point;
+        NT lambda = urdist(rng);
+        point = (lambda * b1);
+        point = ((1 - lambda) * b2) + point;
+    }
+
+
+    template<class Polytope, class Point, class Parameters, class MT>
+    void hit_and_run_sampled_covariance_matrix(Point &p,
+                                               Polytope &P,
+                                               Parameters &var,
+                                               Point &b1,
+                                               Point &b2,
+                                               MT &covarianceMatrix) {
+        typedef typename Parameters::RNGType RNGType;
+        typedef typename Point::FT NT;
+        typedef typename Polytope::VT VT;
+
+        unsigned int n = P.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
+
+        Point l = get_direction<RNGType, Point, NT>(n);
+        VT lVT = l.getCoefficients();
+        lVT = covarianceMatrix * lVT;
+        l = Point(lVT);
+        std::pair<NT, NT> dbpair = P.line_intersect(p, l);
+        NT min_plus = dbpair.first;
+        NT max_minus = dbpair.second;
+        b1 = (min_plus * l) + p;
+        b2 = (max_minus * l) + p;
+        NT lambda = urdist(rng);
+        p = (lambda * b1);
+        p = ((1 - lambda) * b2) + p;
+    }
 
 //hit-and-run with random directions and update
 // copied this function - need it to return the end points of the segment
-template<class Polytope, class Point, class Parameters, class MT>
-void hit_and_run_sampled_covariance_matrix(Point &p,
-                                           Polytope &P,
-                                           Parameters &var,
-                                           MT &covarianceMatrix) {
-    typedef typename Parameters::RNGType RNGType;
-    typedef typename Point::FT NT;
-    typedef typename Polytope::VT VT;
+    template<class Polytope, class Point, class Parameters, class MT>
+    void hit_and_run_sampled_covariance_matrix(Point &p,
+                                               Polytope &P,
+                                               Parameters &var,
+                                               MT &covarianceMatrix) {
+        typedef typename Parameters::RNGType RNGType;
+        typedef typename Point::FT NT;
+        typedef typename Polytope::VT VT;
 
-    unsigned int n = P.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
+        unsigned int n = P.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
 
-    Point l = get_direction<RNGType, Point, NT>(n);
-    VT lVT = l.getCoefficients();
-    lVT = covarianceMatrix * lVT;
-    l = Point(lVT);
-    std::pair<NT, NT> dbpair = P.line_intersect(p, l);
-    NT min_plus = dbpair.first;
-    NT max_minus = dbpair.second;
-    Point b1 = (min_plus * l) + p;
-    Point b2 = (max_minus * l) + p;
-    NT lambda = urdist(rng);
-    p = (lambda * b1);
-    p = ((1 - lambda) * b2) + p;
-}
+        Point l = get_direction<RNGType, Point, NT>(n);
+        VT lVT = l.getCoefficients();
+        lVT = covarianceMatrix * lVT;
+        l = Point(lVT);
+        std::pair<NT, NT> dbpair = P.line_intersect(p, l);
+        NT min_plus = dbpair.first;
+        NT max_minus = dbpair.second;
+        Point b1 = (min_plus * l) + p;
+        Point b2 = (max_minus * l) + p;
+        NT lambda = urdist(rng);
+        p = (lambda * b1);
+        p = ((1 - lambda) * b2) + p;
+    }
 
 //return at bpair the lambdas of the end points
 //hit-and-run with orthogonal directions and update
-template <class Polytope, class Point, typename NT>
-void hit_and_run_coord_update(Point &p,
-                              Point &p_prev,
-                              Polytope &P,
-                              unsigned int rand_coord,
-                              unsigned int rand_coord_prev,
-                              NT kapa,
-                              std::vector<NT> &lamdas,
-                              std::pair <NT, NT>& bpair) {
-    bpair = P.line_intersect_coord(p, p_prev, rand_coord, rand_coord_prev, lamdas);
-    p_prev = p;
-    p.set_coord(rand_coord, p[rand_coord] + bpair.first + kapa * (bpair.second - bpair.first));
-}
+    template<class Polytope, class Point, typename NT>
+    void hit_and_run_coord_update(Point &p,
+                                  Point &p_prev,
+                                  Polytope &P,
+                                  unsigned int rand_coord,
+                                  unsigned int rand_coord_prev,
+                                  NT kapa,
+                                  std::vector<NT> &lamdas,
+                                  std::pair<NT, NT> &bpair) {
+        bpair = P.line_intersect_coord(p, p_prev, rand_coord, rand_coord_prev, lamdas);
+        p_prev = p;
+        p.set_coord(rand_coord, p[rand_coord] + bpair.first + kapa * (bpair.second - bpair.first));
+    }
 
 //return at bpair the lambdas of the end points and the endpoints
 //hit-and-run with orthogonal directions and update
-template <class Polytope, class Point, typename NT, class VT>
-void hit_and_run_coord_update_isotropic(Point &p,
-                              Point &p_prev,
-                              Polytope &P,
-                              unsigned int rand_coord,
-                              unsigned int rand_coord_prev,
-                              NT kapa,
-                              std::vector<NT> &lamdas,
-                              std::pair <NT, NT>& bpair,
-                              Point& p1,
-                              Point& p2,
-                              VT& isotropic) {
-    Point v = Point(isotropic);
-    bpair = P.line_intersect(p,v);
+    template<class Polytope, class Point, typename NT, class VT>
+    void hit_and_run_coord_update_isotropic(Point &p,
+                                            Point &p_prev,
+                                            Polytope &P,
+                                            unsigned int rand_coord,
+                                            unsigned int rand_coord_prev,
+                                            NT kapa,
+                                            std::vector<NT> &lamdas,
+                                            std::pair<NT, NT> &bpair,
+                                            Point &p1,
+                                            Point &p2,
+                                            VT &isotropic) {
+        Point v = Point(isotropic);
+        bpair = P.line_intersect(p, v);
 //    bpair = P.line_intersect_coord(p, p_prev, rand_coord, rand_coord_prev, lamdas);
-    p_prev = p;
-    NT min_plus = bpair.first;
-    NT max_minus = bpair.second;
-    p1 = (min_plus * v) + p;
-    p2 = (max_minus * v) + p;
-    p = (kapa * p1);
-    p = ((1 - kapa) * p2) + p;
+        p_prev = p;
+        NT min_plus = bpair.first;
+        NT max_minus = bpair.second;
+        p1 = (min_plus * v) + p;
+        p2 = (max_minus * v) + p;
+        p = (kapa * p1);
+        p = ((1 - kapa) * p2) + p;
 //    p.set_coord(rand_coord, p[rand_coord] + bpair.first + kapa * (bpair.second - bpair.first));
-}
+    }
 
 
 //hit-and-run with orthogonal directions and update
-template <class Polytope, class Point, typename NT>
-void hit_and_run_coord_update(Point &p,
-                             Point &p_prev,
-                             Polytope &P,
-                             unsigned int rand_coord,
-                             unsigned int rand_coord_prev,
-                             NT kapa,
-                             std::vector<NT> &lamdas) {
-    std::pair <NT, NT> bpair = P.line_intersect_coord(p, p_prev, rand_coord, rand_coord_prev, lamdas);
-    p_prev = p;
-    p.set_coord(rand_coord, p[rand_coord] + bpair.first + kapa * (bpair.second - bpair.first));
-}
-
-template <class ConvexBody, class Point, class Parameters, typename NT>
-void billiard_walk(ConvexBody &P, Point &p, NT che_rad, std::vector<NT> &Ar, std::vector<NT> &Av, NT &lambda_prev,
-                   Parameters &var, bool first = false) {
-
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n = P.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
-    NT T = urdist(rng) * che_rad;
-    Point v = get_direction<RNGType, Point, NT>(n);
-    Point p0=p, v_prev=v;
-    std::pair<NT, int> pbpair;
-    int it=0;
-
-    NT lambda_max=0.0;
-    if (first) {
-
-        //p.print();
-        //std::cout<<"[first][in bill] is_in = "<<P.is_in(p)<<std::endl;
-        //std::cout<<"[1]before line intersection"<<std::endl;
-        pbpair = P.line_positive_intersect(p, v, Ar, Av);
-        //while(pbpair.first < 0.00001 && pbpair.second != P.num_of_hyperplanes()){
-        // /   std::cout<<"lambda_prev = "<<pbpair.first<<std::endl;
-        //    v = get_direction<RNGType, Point, NT>(n);
-        //    //p = ((-0.01*lambda_prev)*v)+p;
-        //    pbpair = P.line_positive_intersect(p, v, Ar, Av);
-        //    std::cout<<"lambda_meta = "<<pbpair.first<<std::endl;
-        //    sleep(3);
-        //}
-        //std::cout<<"[1]after line intersection"<<std::endl;
-        if (T <= pbpair.first) {
-            p = (T * v) + p;
-            lambda_prev = T;
-            return;
-        }
-        lambda_prev = 0.995 * pbpair.first;
-        //std::cout<<"[first]lambda_pos ="<<lambda_prev<<" T = "<<T<<std::endl;
-        p = (lambda_prev * v) + p;
-        T -= lambda_prev;
-        //std::cout<<"[1]before reflection"<<std::endl;
-        v_prev=v;
-        P.compute_reflection(v, p, pbpair.second);
-        //if(P.is_in(p)==0) throw "Point out!";
-        //if (lambda_prev<0.0000000001) throw "small lambda!";
-        //std::cout<<"[1]after reflection"<<std::endl;
+    template<class Polytope, class Point, typename NT>
+    void hit_and_run_coord_update(Point &p,
+                                  Point &p_prev,
+                                  Polytope &P,
+                                  unsigned int rand_coord,
+                                  unsigned int rand_coord_prev,
+                                  NT kapa,
+                                  std::vector<NT> &lamdas) {
+        std::pair<NT, NT> bpair = P.line_intersect_coord(p, p_prev, rand_coord, rand_coord_prev, lamdas);
+        p_prev = p;
+        p.set_coord(rand_coord, p[rand_coord] + bpair.first + kapa * (bpair.second - bpair.first));
     }
 
-    while (it<3*n) {
+    template<class ConvexBody, class Point, class Parameters, typename NT>
+    void billiard_walk(ConvexBody &P, Point &p, NT che_rad, std::vector<NT> &Ar, std::vector<NT> &Av, NT &lambda_prev,
+                       Parameters &var, bool first = false) {
 
-        //p.print();
-        //std::cout<<"bef [in bill] is_in = "<<P.is_in(p)<<std::endl;
-        //std::cout<<"[2]before line intersection"<<std::endl;
-        pbpair = P.line_positive_intersect(p, v, Ar, Av, lambda_prev);
-        //while(pbpair.first < 0.00001 && pbpair.second != P.num_of_hyperplanes()){
-        //std::cout<<"lambda_prev = "<<pbpair.first<<std::endl;
-        //p = ((-0.01*lambda_prev)*v_prev)+p;
-        //pbpair = P.line_positive_intersect(p, v, Ar, Av, lambda_prev);
-        //std::cout<<"lambda_meta = "<<pbpair.first<<std::endl;
-        //sleep(3);
-        //}
+        typedef typename Parameters::RNGType RNGType;
+        unsigned int n = P.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
+        NT T = urdist(rng) * che_rad;
+        Point v = get_direction<RNGType, Point, NT>(n);
+        Point p0 = p, v_prev = v;
+        std::pair<NT, int> pbpair;
+        int it = 0;
 
-        //std::cout<<"[2]after line intersection"<<std::endl;
-        //std::cout<<"lambda_pos ="<<pbpair.first<<" T = "<<T<<std::endl;
-        if (T <= pbpair.first) {
-            p = (T * v) + p;
-            lambda_prev = T;
-            break;
+        NT lambda_max = 0.0;
+        if (first) {
+
+            //p.print();
+            //std::cout<<"[first][in bill] is_in = "<<P.is_in(p)<<std::endl;
+            //std::cout<<"[1]before line intersection"<<std::endl;
+            pbpair = P.line_positive_intersect(p, v, Ar, Av);
+            //while(pbpair.first < 0.00001 && pbpair.second != P.num_of_hyperplanes()){
+            // /   std::cout<<"lambda_prev = "<<pbpair.first<<std::endl;
+            //    v = get_direction<RNGType, Point, NT>(n);
+            //    //p = ((-0.01*lambda_prev)*v)+p;
+            //    pbpair = P.line_positive_intersect(p, v, Ar, Av);
+            //    std::cout<<"lambda_meta = "<<pbpair.first<<std::endl;
+            //    sleep(3);
+            //}
+            //std::cout<<"[1]after line intersection"<<std::endl;
+            if (T <= pbpair.first) {
+                p = (T * v) + p;
+                lambda_prev = T;
+                return;
+            }
+            lambda_prev = 0.995 * pbpair.first;
+            //std::cout<<"[first]lambda_pos ="<<lambda_prev<<" T = "<<T<<std::endl;
+            p = (lambda_prev * v) + p;
+            T -= lambda_prev;
+            //std::cout<<"[1]before reflection"<<std::endl;
+            v_prev = v;
+            P.compute_reflection(v, p, pbpair.second);
+            //if(P.is_in(p)==0) throw "Point out!";
+            //if (lambda_prev<0.0000000001) throw "small lambda!";
+            //std::cout<<"[1]after reflection"<<std::endl;
         }
 
-        lambda_prev = 0.995 * pbpair.first;
-        //std::cout<<"lambda_pos ="<<lambda_prev<<" T = "<<T<<std::endl;
-        p = (lambda_prev * v) + p;
+        while (it < 3 * n) {
 
-        T -= lambda_prev;
-        //std::cout<<"[2]before reflection"<<std::endl;
-        v_prev=v;
-        P.compute_reflection(v, p, pbpair.second);
-        //std::cout<<"[in bill] is_in = "<<P.is_in(p)<<std::endl;
-        //if(P.is_in(p)==0) throw "Point out!";
-        //if (lambda_prev<0.00000000001) throw "small lambda!";
-        it++;
-        //std::cout<<"[2]after reflection"<<std::endl;
-    }
+            //p.print();
+            //std::cout<<"bef [in bill] is_in = "<<P.is_in(p)<<std::endl;
+            //std::cout<<"[2]before line intersection"<<std::endl;
+            pbpair = P.line_positive_intersect(p, v, Ar, Av, lambda_prev);
+            //while(pbpair.first < 0.00001 && pbpair.second != P.num_of_hyperplanes()){
+            //std::cout<<"lambda_prev = "<<pbpair.first<<std::endl;
+            //p = ((-0.01*lambda_prev)*v_prev)+p;
+            //pbpair = P.line_positive_intersect(p, v, Ar, Av, lambda_prev);
+            //std::cout<<"lambda_meta = "<<pbpair.first<<std::endl;
+            //sleep(3);
+            //}
+
+            //std::cout<<"[2]after line intersection"<<std::endl;
+            //std::cout<<"lambda_pos ="<<pbpair.first<<" T = "<<T<<std::endl;
+            if (T <= pbpair.first) {
+                p = (T * v) + p;
+                lambda_prev = T;
+                break;
+            }
+
+            lambda_prev = 0.995 * pbpair.first;
+            //std::cout<<"lambda_pos ="<<lambda_prev<<" T = "<<T<<std::endl;
+            p = (lambda_prev * v) + p;
+
+            T -= lambda_prev;
+            //std::cout<<"[2]before reflection"<<std::endl;
+            v_prev = v;
+            P.compute_reflection(v, p, pbpair.second);
+            //std::cout<<"[in bill] is_in = "<<P.is_in(p)<<std::endl;
+            //if(P.is_in(p)==0) throw "Point out!";
+            //if (lambda_prev<0.00000000001) throw "small lambda!";
+            it++;
+            //std::cout<<"[2]after reflection"<<std::endl;
+        }
 //    if(it==10*n){
         //for (int i = 0; i < 1; ++i) std::cout<<"IT IS 10*N!!!!!!!!"<<std::endl;
         //for (int i = 0; i < 1; ++i) std::cout<<"lambda_pos ="<<lambda_prev<<" T = "<<T<<std::endl;
@@ -946,7 +942,7 @@ void billiard_walk(ConvexBody &P, Point &p, NT che_rad, std::vector<NT> &Ar, std
         //throw "Point out!";
 //        p=p0;
 //    }
-}
+    }
 
 
 //template <class Point, class Parameters, typename NT>
@@ -1117,85 +1113,101 @@ void billiard_walk(ConvexBody &P, Point &p, NT che_rad, std::vector<NT> &Ar, std
 //}
 
 
-template <class Spectrahedron, class Point, class Parameters, class SpecSettings, typename NT>
-double billiard_walk(Spectrahedron &spectrahedron, Point &p, const NT& che_rad, Parameters &var, const Point& a, const NT& b,
-                         SpecSettings& settings, bool shake_and_bake_directions = false) {
+    template<class Spectrahedron, class Point, class Parameters, class SpecSettings, typename NT>
+    double
+    billiard_walk(Spectrahedron &spectrahedron, Point &p, const NT &che_rad, Parameters &var, const Point &a,
+                  const NT &b,
+                  SpecSettings &settings, bool shake_and_bake_directions = false) {
 
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n = spectrahedron.dimension();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
-    NT T = urdist(rng) * che_rad;
-    Point v;
+        typedef typename Parameters::RNGType RNGType;
+        unsigned int n = spectrahedron.dimension();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
+        NT T = urdist(rng) * che_rad;
+        const NT initial_T = T;
+        Point v;
 
-    if (!shake_and_bake_directions)
-        v = get_direction<RNGType, Point, NT>(n);
-    else
-        rsab_get_direction<RNGType, Point, NT, Parameters> (n,a,v,var);
-
-    NT it = 0;
-    std::pair<NT, bool> pair;
-    NT factor = 10.0;
-
-    while (it < factor*n) {
-
-        pair = spectrahedron.boundaryOracleBilliard(p.getCoefficients(), v.getCoefficients(), a.getCoefficients(), b, settings, it != 0 && shake_and_bake_directions);
-
-        NT lambda = pair.first;
-
-        if (lambda == 0) {
-            return it;
-        }
-
-        it++;
-
-        lambda = 0.995 * lambda;
-
-        if (T <= lambda) {
-            p += (T * v);
-            settings.LMIatP.noalias() += T*settings.B;
-            break;
-        }
-
-        p += (lambda * v);
-        settings.LMIatP.noalias() += lambda*settings.B;
-        T -= lambda;
-
-        if (it >= factor*n)
-            break;
-
-        if (pair.second) {
-            //we hit the cutting plane
-            double l = -2.0 * v.dot(a);
-            v +=  l * a;
-            settings.B += l * settings.Obj;
-            settings.computeB = false;
-        }
+        if (!shake_and_bake_directions)
+            v = get_direction<RNGType, Point, NT>(n);
         else
-            spectrahedron.compute_reflection(settings.genEigenvector, v, p);
+            rsab_get_direction<RNGType, Point, NT, Parameters>(n, a, v, var);
 
+        NT it = 0;
+        std::pair<NT, bool> pair;
+        NT factor = 10.0;
+
+//    std::cout << "Perform billiard walk with n " << n << " and T is " << T << std::endl;
+
+        while (it < factor * n) {
+
+            pair = spectrahedron.boundaryOracleBilliard(p.getCoefficients(), v.getCoefficients(), a.getCoefficients(),
+                                                        b,
+                                                        settings, it != 0 && shake_and_bake_directions);
+
+            NT lambda = pair.first;
+
+            if (lambda == 0) {
+                std::cout << "Returned because lambda is 0" << std::endl;
+                return it;
+            }
+
+            it++;
+
+            NT dampening = 0.995;
+            lambda *= dampening;
+
+            if (T <= lambda) {
+                std::cout << "Return interior point" << std::endl;
+                NT step = var.boundary ? lambda : T;
+                p += step * v;
+                settings.LMIatP.noalias() += step * settings.B;
+                break;
+            }
+
+            p += (lambda * v);
+            settings.LMIatP.noalias() += lambda * settings.B;
+            T -= lambda;
+
+            if (it >= factor * n) {
+                std::cout << "Returned because number of iterations too big. T is still " << T << " from initially " << initial_T << "." << std::endl;
+                break;
+            }
+
+            if (pair.second) {
+                std::cout << "Negative eigenvalue exists" << std::endl;
+                //we hit the cutting plane
+                double l = -2.0 * v.dot(a);
+                v += l * a;
+                settings.B += l * settings.Obj;
+                settings.computeB = false;
+            } else {
+                spectrahedron.compute_reflection(settings.genEigenvector, v, p);
+            }
+        }
+
+        return it;
     }
 
-    return it;
-}
+    template<class Spectrahedron, class Point, class Parameters, class SpecSettings, typename NT>
+    void
+    HMC_boltzmann_reflections(Spectrahedron &spectrahedron, Point &p, NT che_rad, Parameters &var,
+                              Point &objectiveFunction,
+                              NT &temperature,
+                              SpecSettings &settings) {
 
-template <class Spectrahedron, class Point, class Parameters, class SpecSettings, typename NT>
-void HMC_boltzmann_reflections(Spectrahedron &spectrahedron, Point &p, NT che_rad, Parameters &var,  Point& objectiveFunction,  NT& temperature,
-        SpecSettings& settings) {
+        typedef typename Parameters::RNGType RNGType;
+        typedef typename Spectrahedron::MT MT;
+        typedef typename Spectrahedron::VT VT;
+        unsigned int n = spectrahedron.getLMI().getDim();
+        RNGType &rng = var.rng;
+        boost::random::uniform_real_distribution<> urdist(0, 1);
+        NT T = urdist(rng) * che_rad;//0.7*che_rad;
+        Point v(n);
+        int it = 0, max_it = n;
+        NT lambda_max = 0.0;
+        VT pVT = p.get_coefficients();
 
-    typedef typename Parameters::RNGType RNGType;
-    typedef typename Spectrahedron::MT MT;
-    typedef typename Spectrahedron::VT VT;
-    unsigned int n = spectrahedron.getLMI().getDim();
-    RNGType &rng = var.rng;
-    boost::random::uniform_real_distribution<> urdist(0, 1);
-    NT T = urdist(rng) * che_rad;//0.7*che_rad;
-    Point v(n);
-    int it = 0, max_it = n;
-    NT lambda_max = 0.0;
-    VT pVT = p.get_coefficients();
-
-    if(n==2 || n==3) max_it=10*n;
+        if (n == 2 || n == 3) max_it = 10 * n;
 
 //    Point p1 = p;
 
@@ -1212,7 +1224,7 @@ void HMC_boltzmann_reflections(Spectrahedron &spectrahedron, Point &p, NT che_ra
 //        v(1) = 0.5;
 
         //if (settings.isBoundaryPoint && !settings.first) {
-      //      rsab_get_direction<RNGType, Point, NT, Parameters>(n, settings.gradient, v, var);
+        //      rsab_get_direction<RNGType, Point, NT, Parameters>(n, settings.gradient, v, var);
         //}
         //else
         v = get_direction<RNGType, Point, NT>(n);
@@ -1302,7 +1314,7 @@ void HMC_boltzmann_reflections(Spectrahedron &spectrahedron, Point &p, NT che_ra
             settings.B0 += (lambda * settings.B1) + (((-0.5 * lambdaSafe * lambdaSafe) / temperature) * settings.B2);
             T -= lambdaSafe;
 
-            v = -1*objectiveFunction * (lambda / (temperature)) + v;
+            v = -1 * objectiveFunction * (lambda / (temperature)) + v;
 //            std::cout << v.transpose() << "\n";
             spectrahedron.compute_reflection(settings, v);
 
@@ -1312,9 +1324,8 @@ void HMC_boltzmann_reflections(Spectrahedron &spectrahedron, Point &p, NT che_ra
 //    }
 //    exit(0);
 //    std::cout <<"end\n";
-      //p = Point(pVT);
-}
-
+        //p = Point(pVT);
+    }
 
 
 #endif //RANDOM_SAMPLERS_H

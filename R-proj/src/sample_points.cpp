@@ -209,7 +209,8 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::CharacterVector> file = R
                                Rcpp::Nullable<unsigned int> N = R_NilValue,
                                Rcpp::Nullable<unsigned int> walk_length = R_NilValue,
                                   Rcpp::Nullable<double> Temperature = R_NilValue,
-                               Rcpp::Nullable<unsigned int> random_walk = R_NilValue){
+                               Rcpp::Nullable<unsigned int> random_walk = R_NilValue,
+                               Rcpp::Nullable<bool> boundary = R_NilValue){
 
 
     typedef double NT;
@@ -268,10 +269,17 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::CharacterVector> file = R
     var.che_rad = radius;
     var.diameter = diam;
 
+    std::cout << "Check boundary variable ";
+
+    var.boundary = false;
+    if(boundary.isNotNull()){
+        var.boundary = Rcpp::as<bool>(boundary);
+    }
+    std::cout << " boundary variable is " << var.boundary << std::endl;
+
     if(!distribution.isNotNull() || Rcpp::as<std::string>(distribution).compare(std::string("uniform"))==0) {
 
         if (!random_walk.isNotNull() || Rcpp::as<std::string>(random_walk).compare(std::string("Billiard")) == 0) {
-
 
             spectaedro::BoundaryOracleBilliardSettings settings(SP.getLMI().getMatricesDim());
             settings.LMIatP = SP.getLMI().getA0();

@@ -128,9 +128,7 @@ void preproccess_spectrahedron(Spectrahedron &SP, Point &p, Parameters &var, Spe
     int count = 0;
 
     while(true) {
-
         count++;
-
         randPoints.clear();
         //std::cout<<"Sampling 10d points from P.."<<std::endl;
         rand_point_generator_spec(SP, p, 10 * n, 1, randPoints, var, settings);
