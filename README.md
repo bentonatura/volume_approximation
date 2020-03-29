@@ -4,6 +4,8 @@
 
 #### **This is a development branch that contains the supplementary code for paper "Sampling  the feasible sets of SDPs and volume approximation" submitted to ISSAC 2020.**   
 
+This branch adds sampling from the boundary of the spectrahedron to the source code.
+
 Authors:  
 - [Apostolos Chalkis](https://tolischal.github.io) <tolis.chal at gmail.com>  
 - [Vissarion Fisikopoulos](https://vissarion.github.io) <vissarion.fisikopoulos at gmail.com>  
@@ -48,6 +50,7 @@ library(volesti)
     4. `walk_length` is an integer to declare the walk length of the random walk. The default value is `1`.  
     5. `Temperature` is a numeric input to declare the variance of the Boltzamann distribution. The default value is `1`.  
     6. `random_walk` is a string to declare the random walk to use: a) `billiard` for billiard walk, b) `RDHR` for random directions Hit and Run, c) `CDHR` for coordinate directions Hit and Run or d) `HMC` for Hamiltonian Monte Carlo for reflections. The default value `billiard` for the uniform distribution and `HMC` for the Boltzmann distribution.  
+    7. `boundary` is a boolean (either `TRUE` or `FALSE`, default is `FALSE`) to sample from the boundary of the spectrahedron.
   - **Output**: A `nxN` matrix that contains the sampled points columnwise.  
 
 * Approximate the solution of an sdp using the function `sdp_approx()`.  
