@@ -224,8 +224,6 @@ void rand_point_generator_spec(Spectrahedron &spectrahedron,
                                PointList &randPoints,
                                Parameters &var,
                                SpecSettings &settings) {
-    std::cout << "Boundary var: " << var.boundary << std::endl;
-
     for (unsigned int i = 1; i <= rnum; ++i) {
         for (unsigned int j = 0; j < walk_len; ++j) {
             if (var.billiard) {
@@ -1135,6 +1133,9 @@ void hit_and_run_spec(Point &point,
         NT it = 0;
         std::pair<NT, bool> pair;
         NT factor = 10.0;
+
+        //HACK to make case T = numeric_limits work
+        T = std::min(T, NT(10));
 
 //    std::cout << "Perform billiard walk with n " << n << " and T is " << T << std::endl;
 

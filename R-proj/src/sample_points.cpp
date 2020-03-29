@@ -248,6 +248,7 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::CharacterVector> file = R
     boost::random::uniform_real_distribution<>(urdist);
     boost::random::uniform_real_distribution<> urdist1(-1,1);
     boost::random::uniform_int_distribution<> uidist(0, n - 1);
+    boost::random::uniform_int_distribution<> uibool(0,1);
     
     Point p(n);
     std::list<Point> randPoints;
@@ -260,6 +261,7 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::CharacterVector> file = R
     if(Temperature.isNotNull()) T = Rcpp::as<NT>(Temperature);
 
     SP.ComputeInnerBall(diam, radius);
+//    std::cout << "Inner ball diameter computed as: " << diam << " " << radius << std::endl;
 
     std::pair<Point,NT> InnerB;
     InnerB.first = p;
@@ -269,13 +271,13 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::CharacterVector> file = R
     var.che_rad = radius;
     var.diameter = diam;
 
-    std::cout << "Check boundary variable ";
+//    std::cout << "Check boundary variable ";
 
     var.boundary = false;
     if(boundary.isNotNull()){
         var.boundary = Rcpp::as<bool>(boundary);
     }
-    std::cout << " boundary variable is " << var.boundary << std::endl;
+//    std::cout << " boundary variable is " << var.boundary << std::endl;
 
     if(!distribution.isNotNull() || Rcpp::as<std::string>(distribution).compare(std::string("uniform"))==0) {
 
@@ -303,13 +305,17 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::CharacterVector> file = R
                 for (int k = 0; k < walkL; ++k) {
                     v = Point(n);
                     rand_coord = uidist(rng);
-                    v.set_coord(rand_coord, 1.0);//(rand_coord) = 1.0;
+                    int rand_sign = 2 * uibool(rng) - 1;
+                    v.set_coord(rand_coord, rand_sign * 1.0);//(rand_coord) = 1.0;
                     std::pair <NT, NT> dbpair = SP.boundaryOracle(p.get_coefficients(), v.get_coefficients());
                     double min_plus = dbpair.first;
                     double max_minus = dbpair.second;
                     Point b1 = (min_plus * v) + p;
                     Point b2 = (max_minus * v) + p;
                     double lambda = urdist(rng);
+                    if(var.boundary){
+                        lambda = .995;
+                    }
                     p = (lambda * b1);
                     p = ((1 - lambda) * b2) + p;
                 }

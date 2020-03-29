@@ -460,12 +460,21 @@ public:
 
 
         Eigen::GeneralizedEigenSolver<MT> ges(A, B);
+
+
+        std::cout << "matrix A:" << A << std::endl;
+        std::cout << "matrix B:" << B << std::endl;
+
+
+        std::cout << "The (complex) numerators of the generalized eigenvalues are: " << ges.alphas().transpose() << std::endl;
+        std::cout << "The (real) denominators of the generalized eigenvalues are: " << ges.betas().transpose() << std::endl;
+        std::cout << "The (complex) generalized eigenvalues are (alphas./beta): " << ges.eigenvalues().transpose() << std::endl;
+
         typename Eigen::GeneralizedEigenSolver<MT>::ComplexVectorType alphas = ges.alphas();
         VT betas = ges.betas();
 
-        double lambdaMaxNegative = minDouble;
         double lambdaMinPositive = maxDouble;
-
+        double lambdaMaxNegative = minDouble;
 
         for (int i = 0; i < alphas.rows(); i++) {
             if (betas(i) == 0) //TODO WARNING do what here?
@@ -1138,17 +1147,13 @@ public:
             //std::pair<NT, NT> min_max = boundaryOracleCDHR(center, i, center, bb, CDHRsettings);
             v.set_coord(i, 1.0);
             std::pair<NT, NT> min_max = boundaryOracle(center, v.get_coefficients());
-            //std::cout<<"min_max.first = "<<min_max.first<<", min_max.second = "<<min_max.second<<std::endl;
+            std::cout<<"min_max.first = "<<min_max.first<<", min_max.second = "<<min_max.second<<std::endl;
             if (min_max.first < radius) radius = min_max.first;
             if (-min_max.second < radius) radius = -min_max.second;
-            if (min_max.first-min_max.second > diam ) diam = min_max.first-min_max.second;
+            if (min_max.first - min_max.second > diam ) diam = min_max.first-min_max.second;
         }
-
         radius = radius / std::sqrt(NT(dimension()));
         diam = 1.2 * diam;
-
-        //std::cout<<"diam = "<<diam<<", radius = "<<radius<<std::endl;
-
     }
 
     template <class SpecSettings>
