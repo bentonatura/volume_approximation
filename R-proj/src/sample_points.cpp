@@ -300,26 +300,32 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::CharacterVector> file = R
         } else if (Rcpp::as<std::string>(random_walk).compare(std::string("CDHR")) == 0) {
             Point v(n);
             p = Point(n);
+            Point b1, b2;
             int rand_coord;
             for (int j = 0; j < NN; ++j) {
                 for (int k = 0; k < walkL; ++k) {
                     v = Point(n);
                     rand_coord = uidist(rng);
-                    int rand_sign = 2 * uibool(rng) - 1;
-                    v.set_coord(rand_coord, rand_sign * 1.0);//(rand_coord) = 1.0;
+                    v.set_coord(rand_coord, 1.0);//(rand_coord) = 1.0;
                     std::pair <NT, NT> dbpair = SP.boundaryOracle(p.get_coefficients(), v.get_coefficients());
                     double min_plus = dbpair.first;
                     double max_minus = dbpair.second;
-                    Point b1 = (min_plus * v) + p;
-                    Point b2 = (max_minus * v) + p;
+                    b1 = (min_plus * v) + p;
+                    b2 = (max_minus * v) + p;
                     double lambda = urdist(rng);
-                    if(var.boundary){
-                        lambda = .995;
-                    }
                     p = (lambda * b1);
                     p = ((1 - lambda) * b2) + p;
                 }
-                randPoints.push_back(p);
+                if(var.boundary){
+                    int rand_sign =  uibool(rng);
+                    if(rand_sign){
+                        randPoints.push_back(b1);
+                    } else {
+                        randPoints.push_back(b2);
+                    }
+                } else {
+                    randPoints.push_back(p);
+                }
             }
         }
     } else if (Rcpp::as<std::string>(distribution).compare(std::string("boltzmann"))==0){
